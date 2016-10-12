@@ -21,9 +21,9 @@ function beba-ctrl {
 
     # install beba-ctrl dependencies"
     sudo apt-get -y install autoconf automake g++ libtool python make libxml2 \
-        libxslt-dev python-pip python-dev python-matplotlib
+        libxslt-dev python-pip python-dev python-matplotlib hping3
 
-    sudo pip install gevent pbr pulp networkx fnss numpy
+    sudo pip install gevent pbr pulp networkx fnss numpy scapy
     sudo pip install -I six==1.9.0
 
     # fetch beba-ctrl
@@ -53,7 +53,7 @@ function mininet {
 # Test BEBA applications
 function test_beba_applications {
     cd ~/beba-ctrl/ryu/app/beba/test/
-    ./run_all.sh
+    ./run_all.sh verbose
 }
 
 sudo apt-get update

@@ -12,4 +12,4 @@ script:
   - "./configure"
   - "make"
   - "sudo make install"
-  - "sudo bash install_mn_ryu.bash"
+  - "sudo bash install_mn_ryu_and_run_tests.bash"

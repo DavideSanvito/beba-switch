@@ -9,3 +9,4 @@ script:
   - "./configure"
   - "make"
   - "sudo make install"
+  - "sudo bash install_mn_ryu.bash"

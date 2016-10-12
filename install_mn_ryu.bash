@@ -34,6 +34,8 @@ function beba-ctrl {
     # install beba-ctrl
     sudo pip install -r tools/pip-requires
     sudo python ./setup.py install
+
+    sudo pip install --upgrade greenlet
 }
 
 # Install Mininet

@@ -21,7 +21,7 @@ function beba-ctrl {
 
     # install beba-ctrl dependencies"
     sudo apt-get -y install autoconf automake g++ libtool python make libxml2 \
-        libxslt-dev python-pip python-dev python-matplotlib hping3
+        libxslt-dev python-pip python-dev python-matplotlib hping3 valgrind
 
     sudo pip install gevent pbr pulp networkx fnss numpy scapy
     sudo pip install -I six==1.9.0

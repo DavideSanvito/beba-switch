@@ -14,6 +14,7 @@
 #define MAX_STATE_KEY_LEN 48
 
 #define STATE_DEFAULT 0
+#define STATE_NULL UINT32_MAX
 /**************************************************************************/
 /*                        experimenter messages ofl_exp                   */
 /**************************************************************************/
@@ -113,6 +114,7 @@ struct ofl_exp_state_stats {
     uint8_t                         table_id;      /* ID of table flow came from. */
     uint32_t                        duration_sec;  /* Time state entry has been alive in secs. */
     uint32_t                        duration_nsec; /* Time state entry has been alive in nsecs beyond duration_sec. */
+    //TODO Davide: we could avoid storing field_count and fields[] within each state entry (the controller already knows the lookup-scope!) 
     uint32_t                        field_count;    /*number of extractor fields*/
     uint32_t                        fields[OFPSC_MAX_FIELD_COUNT]; /*extractor fields*/
     uint32_t                        hard_rollback;
@@ -195,12 +197,11 @@ struct key_extractor {
     uint8_t                     bit;
     uint32_t                    field_count;
     uint32_t                    fields[MAX_EXTRACTION_FIELD_COUNT];
+    uint32_t                    key_len;
 };
 
 struct state_entry {
     struct hmap_node            hmap_node;
-    struct hmap_node            hard_node;
-    struct hmap_node            idle_node;
     uint8_t             key[MAX_STATE_KEY_LEN];
     uint32_t                state;
     struct ofl_exp_state_stats   *stats;
@@ -211,13 +212,15 @@ struct state_entry {
 };
 
 struct state_table {
-    struct key_extractor        read_key;
-    struct key_extractor        write_key;
-    struct key_extractor        bit_write_key;
+    struct key_extractor        lookup_key_extractor;
+    struct key_extractor        update_key_extractor;
+    struct key_extractor        bit_update_key_extractor;
     struct hmap                 state_entries;
-    struct hmap                 hard_entries;
-    struct hmap                 idle_entries;
     struct state_entry          default_state_entry;
+    struct state_entry          null_state_entry;
+    struct state_entry *        last_lookup_state_entry;
+    bool                        update_scope_is_eq_lookup_scope;
+    bool                        bit_update_scope_is_eq_lookup_scope;
     uint8_t stateful;
 };
 
@@ -255,16 +258,19 @@ state_table_create(void);
 void
 state_table_destroy(struct state_table *);
 
-uint8_t
-state_table_is_stateful(struct state_table *);
-
-bool state_table_is_configured(struct state_table *table);
+bool state_table_is_enabled(struct state_table *table);
 
 struct state_entry *
 state_table_lookup(struct state_table*, struct packet *);
 
 void
-state_table_write_state(struct state_entry *, struct packet *);
+state_table_write_state_header(struct state_entry *, struct ofl_match_tlv *);
+
+bool
+extractors_are_equal(struct key_extractor *ke1, struct key_extractor *ke2);
+
+void
+state_table_flush(struct state_table *table, uint64_t now_us);
 
 /*
  * State Sync: One extra argument (i.e., ntf_message) is passed at the end of this function.
@@ -276,13 +282,13 @@ ofl_err
 state_table_inc_state(struct state_table *, struct packet *);
 
 ofl_err
+state_table_configure_stateful(struct state_table *table, uint8_t stateful);
+
+ofl_err
 state_table_set_extractor(struct state_table *, struct key_extractor *, int);
 
 ofl_err
 state_table_del_state(struct state_table *, uint8_t *, uint32_t);
-
-void
-state_table_timeout(struct state_table *table);
 
 /*experimenter message functions*/
 
@@ -439,28 +445,28 @@ ofl_exp_beba_error_to_string(struct ofl_msg_exp_error const *msg);
 void
 ofl_exp_stats_type_print(FILE *stream, uint32_t type);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put8(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint8_t value);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put8m(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint8_t value, uint8_t mask);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put16(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint16_t value);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put16m(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint16_t value, uint16_t mask);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put32(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint32_t value);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put32m(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint32_t value, uint32_t mask);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put64(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint64_t value);
 
-void
+struct ofl_match_tlv *
 ofl_structs_match_exp_put64m(struct ofl_match *match, uint32_t header, uint32_t experimenter_id, uint64_t value, uint64_t mask);
 
 /*************************************************************************/

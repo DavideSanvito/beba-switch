@@ -81,6 +81,9 @@ static size_t
 select_from_select_group(struct group_entry *entry);
 
 static size_t
+select_from_select_group_ECMP(struct group_entry *entry, struct packet *pkt);
+
+static size_t
 select_from_ff_group(struct group_entry *entry);
 
 struct group_entry *
@@ -187,7 +190,8 @@ execute_all(struct group_entry *entry, struct packet *pkt) {
 /* Executes a group entry of type SELECT. */
 static void
 execute_select(struct group_entry *entry, struct packet *pkt) {
-    size_t b  = select_from_select_group(entry);
+    //size_t b  = select_from_select_group(entry);
+    size_t b  = select_from_select_group_ECMP(entry, pkt);
 
     if (b != -1) {
         struct ofl_bucket *bucket = entry->desc->buckets[b];
@@ -460,6 +464,75 @@ select_from_select_group(struct group_entry *entry) {
         first_rand=0;
     }
     return rand() % entry->desc->buckets_num;  /* random int between 0 and buckets_num-1 */
+}
+
+/* Selects a bucket from a random group using ECMP (i.e. each flow is consistently sent to an unique bucket) */
+static size_t
+select_from_select_group_ECMP(struct group_entry *entry, struct packet *pkt) {
+    if (entry->desc->buckets_num == 0) {
+        return -1;
+    }
+
+    struct ofl_match_tlv *f;
+    uint32_t input;
+
+    bool found = false;
+    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv,
+    hmap_node, hash_int(OXM_OF_TCP_SRC, 0), &pkt->handle_std.match.match_fields){
+        if (f->header == OXM_OF_TCP_SRC) {
+            input = *((uint16_t*) f->value);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found){
+        return rand() % entry->desc->buckets_num;
+    }
+
+    found = false;
+    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv,
+    hmap_node, hash_int(OXM_OF_TCP_DST, 0), &pkt->handle_std.match.match_fields){
+        if (f->header == OXM_OF_TCP_DST) {
+            input += *((uint16_t*) f->value);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found){
+        return rand() % entry->desc->buckets_num;
+    }
+
+    found = false;
+    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv,
+    hmap_node, hash_int(OXM_OF_IPV4_SRC, 0), &pkt->handle_std.match.match_fields){
+        if (f->header == OXM_OF_IPV4_SRC) {
+            input += *((uint32_t*) f->value);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found){
+        return rand() % entry->desc->buckets_num;
+    }
+
+    found = false;
+    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv,
+    hmap_node, hash_int(OXM_OF_IPV4_DST, 0), &pkt->handle_std.match.match_fields){
+        if (f->header == OXM_OF_IPV4_DST) {
+            input += *((uint32_t*) f->value);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found){
+        return rand() % entry->desc->buckets_num;
+    }
+
+    return input % entry->desc->buckets_num;
 }
 
 

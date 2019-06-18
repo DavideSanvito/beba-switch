@@ -445,13 +445,13 @@ packet_handle_std_validate(struct packet_handle_std *handle) {
     uint32_t state = 0;
     uint8_t condition[OFPSC_MAX_CONDITIONS_NUM] = { 0 };
     uint32_t timestamp;
-    uint16_t random = 0;    //TODO Davide: pick a random number (see udatapath/group_entry.c)
+    uint16_t random = random_uint16();
     bool has_state = false;
     bool has_condition[OFPSC_MAX_CONDITIONS_NUM] = { false };
     int i = 0;
     uint32_t current_global_state = OFP_GLOBAL_STATE_DEFAULT;
     gettimeofday(&tv,NULL);
-    timestamp = (1000000 * tv.tv_sec + tv.tv_usec)/1000; // timestamp in ms
+    timestamp = (1000000 * (long long)tv.tv_sec + tv.tv_usec)/1000; // timestamp in ms
 
     if(handle->valid)
         return;

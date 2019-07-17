@@ -27,7 +27,9 @@ enum oxm_exp_match_fields {
     OFPXMT_EXP_CONDITION7,        /* Condition 7 */
     OFPXMT_EXP_TIMESTAMP,         /* Timestamp */
     OFPXMT_EXP_RANDOM,            /* Random */
-    OFPXMT_EXP_PKT_LEN            /* Packet length */
+    OFPXMT_EXP_PKT_LEN,           /* Packet length */
+    OFPXMT_EXP_HASH_MOD_P,        /* Hash mod p */
+    OFPXMT_EXP_HASH_MOD_P_1       /* Hash mod p-1 */
 };
 
 /****************************************************************

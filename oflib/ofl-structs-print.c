@@ -508,6 +508,12 @@ ofl_structs_oxm_tlv_print(FILE *stream, struct ofl_match_tlv *f)
 		 		case OFPXMT_EXP_PKT_LEN:
    		        	fprintf(stream, "pkt_len=\"%"PRIu16"\"", *((uint16_t*)(f->value + EXP_ID_LEN)));
   		 			break;
+                case OFPXMT_EXP_HASH_MOD_P:
+                    fprintf(stream, "hash_mod_p=\"%d\"", *((uint8_t*)(f->value + EXP_ID_LEN)));
+                    break;
+                case OFPXMT_EXP_HASH_MOD_P_1:
+                    fprintf(stream, "hash_mod_p_1=\"%d\"", *((uint8_t*)(f->value + EXP_ID_LEN)));
+                    break;
 				default:
 					fprintf(stream, "unknown type %d", field);
 			}

@@ -244,6 +244,8 @@
 #define OXM_EXP_TIMESTAMP OXM_HEADER        (0xFFFF, 10, 8)
 #define OXM_EXP_RANDOM OXM_HEADER           (0xFFFF, 11, 6)
 #define OXM_EXP_PKT_LEN OXM_HEADER          (0xFFFF, 12, 6)
+#define OXM_EXP_HASH_MOD_P OXM_HEADER       (0xFFFF, 13, 5)
+#define OXM_EXP_HASH_MOD_P_1 OXM_HEADER     (0xFFFF, 14, 5)
 
 /* ## ------------------------------- ## */
 /* ## IPv6 compatible fields. ## */
@@ -305,7 +307,7 @@ enum oxm_field_index {
 #define DEFINE_FIELD(HEADER,DL_TYPES, NW_PROTO, MASKABLE) \
         OFI_OXM_##HEADER,
 #include "oxm-match.def"
-    NUM_OXM_FIELDS = 73
+    NUM_OXM_FIELDS = 75
 };
 
 struct oxm_field {

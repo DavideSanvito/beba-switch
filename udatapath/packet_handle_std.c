@@ -453,6 +453,9 @@ packet_handle_std_validate(struct packet_handle_std *handle) {
     gettimeofday(&tv,NULL);
     timestamp = 1000 * (long long)tv.tv_sec + tv.tv_usec/1000; // timestamp in ms
 
+    uint8_t current_hash_mod_p = 0;
+    uint8_t current_hash_mod_p_1 = 0;
+
     if(handle->valid)
         return;
 
@@ -484,6 +487,16 @@ packet_handle_std_validate(struct packet_handle_std *handle) {
             condition[i] = *((uint8_t*) (f->value + EXP_ID_LEN));
             has_condition[i] = true;
         }
+    }
+
+    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv, hmap_node,
+            hash_int(OXM_EXP_HASH_MOD_P,0), & handle->match.match_fields){
+        current_hash_mod_p = *(uint8_t *)(f->value + EXP_ID_LEN);
+    }
+
+    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv, hmap_node,
+            hash_int(OXM_EXP_HASH_MOD_P_1,0), & handle->match.match_fields){
+        current_hash_mod_p_1 = *(uint8_t *)(f->value + EXP_ID_LEN);
     }
 
     HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv,
@@ -535,6 +548,9 @@ packet_handle_std_validate(struct packet_handle_std *handle) {
             ofl_structs_match_exp_put8(&handle->match, f->header, 0xBEBABEBA, condition[i]);
         }
     }
+
+    ofl_structs_match_exp_put8(&handle->match, OXM_EXP_HASH_MOD_P, 0xBEBABEBA, current_hash_mod_p);
+    ofl_structs_match_exp_put8(&handle->match, OXM_EXP_HASH_MOD_P_1, 0xBEBABEBA, current_hash_mod_p_1);
 
     /* Add timestamp and random value to the hash_map */
     ofl_structs_match_exp_put32(&handle->match, OXM_EXP_TIMESTAMP, 0xBEBABEBA, timestamp);

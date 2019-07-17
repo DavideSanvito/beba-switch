@@ -309,6 +309,7 @@ struct state_table {
     struct key_extractor        update_key_extractor;
     struct key_extractor        bit_update_key_extractor;
     struct key_extractor        header_field_extractor[OFPSC_MAX_HEADER_FIELDS];
+    struct key_extractor        five_tuple_extractor;
     struct condition_table_entry*  condition_table[OFPSC_MAX_CONDITIONS_NUM];
     uint32_t                    global_data_var[OFPSC_MAX_GLOBAL_DATA_VAR_NUM];
     struct hmap                 state_entries;

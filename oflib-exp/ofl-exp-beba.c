@@ -1027,7 +1027,9 @@ ofl_exp_beba_act_unpack(struct ofp_action_header const *src, size_t *len, struct
                                     || da->dst_field == OXM_EXP_CONDITION7
                                     || da->dst_field == OXM_EXP_TIMESTAMP
                                     || da->dst_field == OXM_EXP_RANDOM
-                                    || da->dst_field == OXM_EXP_PKT_LEN){
+                                    || da->dst_field == OXM_EXP_PKT_LEN
+                                    || da->dst_field == OXM_EXP_HASH_MOD_P
+                                    || da->dst_field == OXM_EXP_HASH_MOD_P_1){
                 
                 return ofl_error(OFPET_BAD_ACTION, OFPBAC_BAD_SET_TYPE);
                 break;
@@ -1917,6 +1919,16 @@ ofl_exp_beba_field_unpack(struct ofl_match *match, struct oxm_field const *f, vo
             ofl_structs_match_exp_put16(match, f->header, ntohl(*((uint32_t*) experimenter_id)), ntohs(*((uint16_t*) value)));
             return 0;
         }
+        case OXM_EXP_HASH_MOD_P: {
+            ofl_structs_match_exp_put8(match, f->header, ntohl(*((uint32_t *) experimenter_id)),
+                                       *((uint8_t *) value));
+            return 0;
+        }
+        case OXM_EXP_HASH_MOD_P_1: {
+            ofl_structs_match_exp_put8(match, f->header, ntohl(*((uint32_t *) experimenter_id)),
+                                       *((uint8_t *) value));
+            return 0;
+        }
         default:
             NOT_REACHED();
     }
@@ -2359,6 +2371,13 @@ struct state_table *state_table_create(void) {
 
     table->null_state_entry.state = STATE_NULL;
     //TODO Davide should we zero-set all the other fields (stats, etc..)?
+
+    table->five_tuple_extractor.field_count = 4;
+    table->five_tuple_extractor.key_len = 4+4+2+2;
+    table->five_tuple_extractor.fields[0] = OXM_OF_IPV4_SRC;
+    table->five_tuple_extractor.fields[1] = OXM_OF_IPV4_DST;
+    table->five_tuple_extractor.fields[2] = OXM_OF_TCP_SRC;
+    table->five_tuple_extractor.fields[3] = OXM_OF_TCP_DST;
 
     table->last_lookup_state_entry = NULL;
     table->last_update_state_entry = NULL;

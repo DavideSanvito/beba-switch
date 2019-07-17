@@ -210,6 +210,35 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt)
                 state_table_write_condition_header(condition_evaluation_result, condition_hdr[i]);
             }
 
+            /********************************************* hash(5-tuple) generator ************************************/
+
+            // Ugly: we assume that if the latest global data variable is greater than 0, then we are requiring to compute
+            // hash(5-tuple) % GDV[-1] and hash(5-tuple) % (GDV[-1] -1 ).
+            // This just to avoid creating a dedicated msg to configure it...
+            uint8_t module = table->state_table->global_data_var[OFPSC_MAX_GLOBAL_DATA_VAR_NUM-1];
+            if (module > 0){
+                VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) generator has been configured for this stage");
+                uint8_t key[4+4+2+2] = {0};
+                if (__extract_key(key, &table->state_table->five_tuple_extractor, pkt)){
+                    uint32_t hash = hash_bytes(key, OFPSC_MAX_KEY_LEN, 0);
+                    VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) %% %d = %"PRIu32" %% %d = %"PRIu32, module, hash, module, hash % module);
+                    VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) %% (%d-1) = %"PRIu32" %% (%d-1) = %"PRIu32, module, hash, module, hash % (module-1));
+
+                    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv, hmap_node,
+                        hash_int(OXM_EXP_HASH_MOD_P,0), &pkt->handle_std.match.match_fields){
+                            uint8_t *hash_mod_p = (uint8_t *) (f->value + EXP_ID_LEN);
+                            *hash_mod_p = hash % module;
+                    }
+
+                    HMAP_FOR_EACH_WITH_HASH(f, struct ofl_match_tlv, hmap_node,
+                        hash_int(OXM_EXP_HASH_MOD_P_1,0), &pkt->handle_std.match.match_fields){
+                            uint8_t *hash_mod_p_1 = (uint8_t *) (f->value + EXP_ID_LEN);
+                            *hash_mod_p_1 = hash % (module-1);
+                    }
+                } else {
+                    VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) = 0 (5-tuple not found in the packet...)");
+                }
+            }
         } else {
             // FIXME: avoid matching on state on non-stateful stages.
             // hint: don't touch the packet, avoid installing flowmods that match on state.

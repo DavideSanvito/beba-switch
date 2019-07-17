@@ -1919,12 +1919,12 @@ ofl_exp_beba_field_unpack(struct ofl_match *match, struct oxm_field const *f, vo
             ofl_structs_match_exp_put16(match, f->header, ntohl(*((uint32_t*) experimenter_id)), ntohs(*((uint16_t*) value)));
             return 0;
         }
-        case OXM_EXP_HASH_MOD_P: {
+        case OFI_OXM_EXP_HASH_MOD_P: {
             ofl_structs_match_exp_put8(match, f->header, ntohl(*((uint32_t *) experimenter_id)),
                                        *((uint8_t *) value));
             return 0;
         }
-        case OXM_EXP_HASH_MOD_P_1: {
+        case OFI_OXM_EXP_HASH_MOD_P_1: {
             ofl_structs_match_exp_put8(match, f->header, ntohl(*((uint32_t *) experimenter_id)),
                                        *((uint8_t *) value));
             return 0;

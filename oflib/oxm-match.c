@@ -578,8 +578,8 @@ parse_oxm_entry(struct ofl_match *match, const struct oxm_field *f, const void *
         case OFI_OXM_EXP_TIMESTAMP:
         case OFI_OXM_EXP_RANDOM:
         case OFI_OXM_EXP_PKT_LEN:
-        case OFI_OXM_EXP_HASH_MOD_P_1:
         case OFI_OXM_EXP_HASH_MOD_P:
+        case OFI_OXM_EXP_HASH_MOD_P_1:
         case NUM_OXM_FIELDS:
             NOT_REACHED();
     }

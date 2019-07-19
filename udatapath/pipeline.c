@@ -220,7 +220,7 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt)
                 VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) generator has been configured for this stage");
                 uint8_t key[4+4+2+2] = {0};
                 if (__extract_key(key, &table->state_table->five_tuple_extractor, pkt)){
-                    uint32_t hash = hash_bytes(key, OFPSC_MAX_KEY_LEN, 0);
+                    uint32_t hash = hash_bytes(key, 4+4+2+2, 0);
                     VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) %% %d = %"PRIu32" %% %d = %"PRIu32, module, hash, module, hash % module);
                     VLOG_DBG_RL(LOG_MODULE, &rl, "hash(5-tuple) %% (%d-1) = %"PRIu32" %% (%d-1) = %"PRIu32, module, hash, module, hash % (module-1));
 
